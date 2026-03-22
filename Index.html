@@ -1,1 +1,557 @@
+<!DOCTYPE html>
 
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BXH HISTORY — Lịch Sử Bảng Xếp Hạng</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:      #04040e;
+  --bg2:     #07071a;
+  --surface: rgba(10,10,26,0.92);
+  --border:  rgba(0,229,255,0.14);
+  --cyan:    #00e5ff;
+  --cyan2:   #4dffc8;
+  --gold:    #ffd54a;
+  --purple:  #7c3aed;
+  --text:    rgba(231,251,255,0.92);
+  --muted:   rgba(231,251,255,0.42);
+  --glow:    0 0 30px rgba(0,229,255,0.18);
+}
+*,*::before,*::after { margin:0; padding:0; box-sizing:border-box; }
+html { scroll-behavior:smooth; }
+body { font-family:'Rajdhani',sans-serif; background:var(--bg); color:var(--text); min-height:100vh; overflow-x:hidden; }
+
+/* BG */
+.bg-fx { position:fixed; inset:0; z-index:0; pointer-events:none; }
+.bg-fx::before {
+content:’’; position:absolute; inset:0;
+background:
+radial-gradient(ellipse 65% 45% at 10% 10%, rgba(0,229,255,0.06) 0%, transparent 60%),
+radial-gradient(ellipse 55% 55% at 90% 90%, rgba(124,58,237,0.07) 0%, transparent 60%);
+}
+.bg-fx::after {
+content:’’; position:absolute; inset:0;
+background-image:
+linear-gradient(rgba(0,229,255,0.025) 1px, transparent 1px),
+linear-gradient(90deg, rgba(0,229,255,0.025) 1px, transparent 1px);
+background-size: 48px 48px;
+}
+
+::-webkit-scrollbar { width:5px; }
+::-webkit-scrollbar-track { background:var(–bg2); }
+::-webkit-scrollbar-thumb { background:linear-gradient(var(–cyan),var(–purple)); border-radius:3px; }
+
+/* HEADER */
+header {
+position:sticky; top:0; z-index:50;
+background:rgba(4,4,14,0.90);
+backdrop-filter:blur(20px);
+border-bottom:1px solid var(–border);
+padding:0 24px; height:62px;
+display:flex; align-items:center; justify-content:space-between; gap:16px;
+}
+.logo {
+font-family:‘Orbitron’,monospace; font-size:1.1rem; font-weight:900;
+letter-spacing:3px;
+background:linear-gradient(135deg,var(–cyan),var(–cyan2));
+-webkit-background-clip:text; -webkit-text-fill-color:transparent;
+display:flex; align-items:center; gap:10px;
+}
+.logo-pulse {
+width:9px; height:9px; border-radius:50%;
+background:var(–cyan); box-shadow:0 0 10px var(–cyan);
+flex-shrink:0; animation:pulse 2s ease-in-out infinite;
+}
+@keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.4;transform:scale(.65)} }
+
+.header-right { display:flex; align-items:center; gap:10px; }
+.badge {
+background:rgba(0,229,255,0.10); border:1px solid var(–border);
+border-radius:20px; padding:4px 14px;
+font-size:.75rem; font-weight:700; color:var(–cyan);
+font-family:‘Share Tech Mono’,monospace; white-space:nowrap;
+}
+
+/* MAIN */
+main { position:relative; z-index:1; max-width:1480px; margin:0 auto; padding:28px 20px 80px; }
+
+/* TOOLBAR */
+.toolbar {
+display:flex; align-items:center; flex-wrap:wrap; gap:10px;
+margin-bottom:24px;
+}
+.section-label {
+font-family:‘Orbitron’,monospace; font-size:.72rem; font-weight:700;
+letter-spacing:3px; text-transform:uppercase; color:var(–cyan); opacity:.65;
+}
+.search-wrap { position:relative; flex:1; max-width:300px; }
+.search-wrap input {
+width:100%; background:rgba(0,0,0,.5);
+border:1px solid rgba(0,229,255,.18); border-radius:8px;
+padding:8px 14px 8px 34px;
+color:var(–text); font-family:‘Rajdhani’,sans-serif; font-size:.9rem; outline:none;
+transition:border-color .2s;
+}
+.search-wrap input:focus { border-color:var(–cyan); }
+.search-wrap input::placeholder { color:var(–muted); }
+.search-icon { position:absolute; left:11px; top:50%; transform:translateY(-50%); color:var(–muted); font-size:.82rem; pointer-events:none; }
+
+select.filter {
+background:rgba(0,0,0,.45); border:1px solid rgba(0,229,255,.18);
+border-radius:8px; padding:8px 12px;
+color:var(–text); font-family:‘Rajdhani’,sans-serif; font-size:.88rem; outline:none;
+transition:border-color .2s; cursor:pointer;
+}
+select.filter:focus { border-color:var(–cyan); }
+select.filter option { background:#0d0d25; }
+
+/* GRID */
+.grid {
+display:grid;
+grid-template-columns:repeat(auto-fill,minmax(260px,1fr));
+gap:14px;
+}
+
+/* CARD */
+.card {
+background:var(–surface);
+border:1px solid var(–border);
+border-radius:14px; overflow:hidden;
+backdrop-filter:blur(16px);
+cursor:pointer;
+transition:transform .2s, border-color .2s, box-shadow .2s;
+animation:cardIn .3s ease both;
+position:relative;
+}
+@keyframes cardIn { from{opacity:0;transform:translateY(14px)} to{opacity:1;transform:none} }
+.card:hover {
+transform:translateY(-5px);
+border-color:rgba(0,229,255,.42);
+box-shadow:0 14px 44px rgba(0,229,255,.12);
+}
+.card:hover .card-img { transform:scale(1.05); }
+
+/* Slot number badge */
+.card-num {
+position:absolute; top:10px; left:10px; z-index:2;
+width:32px; height:32px; border-radius:8px;
+background:rgba(4,4,14,.85); border:1px solid rgba(0,229,255,.38);
+backdrop-filter:blur(8px);
+display:flex; align-items:center; justify-content:center;
+font-family:‘Orbitron’,monospace; font-size:.72rem; font-weight:700; color:var(–cyan);
+}
+
+/* Download button — appears on hover */
+.card-dl {
+position:absolute; top:10px; right:10px; z-index:2;
+width:32px; height:32px; border-radius:8px;
+background:rgba(4,4,14,.85); border:1px solid rgba(0,229,255,.25);
+color:var(–muted); font-size:.82rem;
+display:flex; align-items:center; justify-content:center;
+text-decoration:none;
+opacity:0; transition:opacity .18s, border-color .15s, color .15s;
+backdrop-filter:blur(8px);
+}
+.card:hover .card-dl { opacity:1; }
+.card-dl:hover { border-color:var(–cyan); color:var(–cyan); }
+
+/* Image */
+.card-img-wrap {
+width:100%; overflow:hidden;
+background:rgba(0,0,0,.5);
+position:relative; aspect-ratio:16/10;
+}
+.card-img-wrap::after {
+content:’’; position:absolute; inset:0;
+background:linear-gradient(to bottom, transparent 50%, rgba(4,4,14,.82) 100%);
+pointer-events:none;
+}
+.card-img {
+width:100%; height:100%; object-fit:cover; display:block;
+transition:transform .35s ease;
+}
+
+/* Placeholder */
+.card-ph {
+width:100%; aspect-ratio:16/10;
+display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px;
+background:rgba(0,229,255,.018);
+border-bottom:1px dashed rgba(0,229,255,.10);
+}
+.card-ph-n {
+font-family:‘Orbitron’,monospace; font-size:2rem; font-weight:900;
+color:rgba(0,229,255,.10);
+}
+.card-ph-lbl { font-size:.7rem; color:var(–muted); letter-spacing:1px; text-transform:uppercase; }
+
+/* Body */
+.card-body { padding:11px 14px 14px; }
+.card-title {
+font-family:‘Orbitron’,monospace; font-size:.75rem; font-weight:700;
+color:var(–text); margin-bottom:5px;
+white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+}
+.card-meta { display:flex; align-items:center; gap:7px; flex-wrap:wrap; }
+.card-tag {
+background:rgba(0,229,255,.08); border:1px solid rgba(0,229,255,.20);
+border-radius:4px; padding:1px 8px;
+font-size:.68rem; font-weight:700; color:var(–cyan);
+font-family:‘Share Tech Mono’,monospace;
+}
+
+/* EMPTY */
+.empty {
+grid-column:1/-1; text-align:center; padding:70px 20px;
+color:var(–muted);
+}
+.empty-icon { font-size:2.5rem; margin-bottom:12px; opacity:.3; }
+.empty-title { font-family:‘Orbitron’,monospace; font-size:.85rem; margin-bottom:6px; }
+
+/* LIGHTBOX */
+.lightbox {
+position:fixed; inset:0; z-index:200;
+background:rgba(0,0,0,.92); backdrop-filter:blur(16px);
+display:none; align-items:center; justify-content:center; padding:16px;
+}
+.lightbox.open { display:flex; animation:lbIn .22s ease; }
+@keyframes lbIn { from{opacity:0} to{opacity:1} }
+
+.lb-inner {
+position:relative; max-width:min(1080px,100%); width:100%;
+display:flex; flex-direction:column;
+animation:lbScale .26s cubic-bezier(.34,1.56,.64,1);
+}
+@keyframes lbScale { from{transform:scale(.88)} to{transform:scale(1)} }
+
+.lb-img {
+width:100%; max-height:82vh; object-fit:contain;
+border-radius:12px; display:block;
+border:1px solid rgba(0,229,255,.25);
+box-shadow:var(–glow), 0 24px 80px rgba(0,0,0,.7);
+}
+
+.lb-bar {
+display:flex; align-items:center; justify-content:space-between;
+gap:12px; flex-wrap:wrap; padding:12px 4px 0;
+}
+.lb-info {
+font-family:‘Share Tech Mono’,monospace; font-size:.82rem; color:var(–muted);
+flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+}
+.lb-info b { color:var(–cyan); }
+.lb-btns { display:flex; gap:8px; flex-shrink:0; }
+
+.btn {
+display:inline-flex; align-items:center; gap:6px;
+padding:8px 18px; border:none; border-radius:8px;
+font-family:‘Rajdhani’,sans-serif; font-size:.85rem; font-weight:700;
+letter-spacing:.5px; text-transform:uppercase;
+cursor:pointer; transition:all .2s; text-decoration:none; white-space:nowrap;
+}
+.btn-primary { background:linear-gradient(135deg,#0891b2,var(–cyan)); color:#000; box-shadow:0 4px 18px rgba(0,229,255,.28); }
+.btn-primary:hover { transform:translateY(-2px); box-shadow:0 8px 28px rgba(0,229,255,.42); }
+.btn-ghost { background:rgba(0,229,255,.06); border:1px solid var(–border); color:var(–muted); }
+.btn-ghost:hover { border-color:var(–cyan); color:var(–cyan); }
+.btn-sm { padding:6px 14px; font-size:.78rem; }
+
+.lb-close {
+position:absolute; top:-13px; right:-13px;
+width:34px; height:34px; border-radius:50%;
+background:rgba(4,4,14,.9); border:1px solid rgba(0,229,255,.28);
+color:var(–muted); font-size:.95rem;
+display:flex; align-items:center; justify-content:center;
+cursor:pointer; transition:all .15s;
+}
+.lb-close:hover { color:var(–cyan); border-color:var(–cyan); }
+
+.lb-nav {
+position:absolute; top:50%; transform:translateY(-50%);
+width:44px; height:44px; border-radius:50%;
+background:rgba(4,4,14,.88); border:1px solid var(–border);
+color:var(–muted); font-size:1.3rem;
+display:flex; align-items:center; justify-content:center;
+cursor:pointer; transition:all .15s; backdrop-filter:blur(8px);
+}
+.lb-nav:hover { border-color:var(–cyan); color:var(–cyan); box-shadow:var(–glow); }
+.lb-prev { left:-58px; }
+.lb-next { right:-58px; }
+
+/* COUNTER */
+.lb-counter {
+position:absolute; bottom:14px; left:50%; transform:translateX(-50%);
+background:rgba(4,4,14,.8); border:1px solid var(–border);
+border-radius:20px; padding:3px 12px;
+font-family:‘Share Tech Mono’,monospace; font-size:.72rem; color:var(–muted);
+backdrop-filter:blur(8px); white-space:nowrap;
+}
+
+/* RESPONSIVE */
+@media(max-width:900px) { .lb-prev{left:4px} .lb-next{right:4px} }
+@media(max-width:600px) { .grid{grid-template-columns:repeat(2,1fr);gap:10px} .lb-prev,.lb-next{display:none} }
+@media(max-width:380px) { .grid{grid-template-columns:1fr} }
+</style>
+
+</head>
+<body>
+
+<div class="bg-fx"></div>
+
+<div id="app" style="position:relative;z-index:1">
+
+  <!-- HEADER -->
+
+  <header>
+    <div class="logo">
+      <div class="logo-pulse"></div>
+      BXH HISTORY
+    </div>
+    <div class="header-right">
+      <span class="badge" id="countBadge">45 bảng</span>
+    </div>
+  </header>
+
+  <!-- MAIN -->
+
+  <main>
+    <div class="toolbar">
+      <span class="section-label">Lịch sử bảng xếp hạng</span>
+      <div class="search-wrap">
+        <span class="search-icon">🔍</span>
+        <input type="text" id="searchInp" placeholder="Tìm số BXH..." oninput="render()">
+      </div>
+      <select class="filter" id="filterSel" onchange="render()">
+        <option value="">Tất cả (45)</option>
+        <option value="filled">Đã có ảnh</option>
+        <option value="empty">Chưa có ảnh</option>
+      </select>
+    </div>
+
+```
+<div class="grid" id="grid"></div>
+```
+
+  </main>
+
+</div>
+
+<!-- LIGHTBOX -->
+
+<div class="lightbox" id="lightbox" onclick="lbClickBg(event)">
+  <div class="lb-inner">
+    <button class="lb-close" onclick="closeLb()">✕</button>
+    <button class="lb-nav lb-prev" onclick="lbNav(-1)">‹</button>
+    <button class="lb-nav lb-next" onclick="lbNav(+1)">›</button>
+    <img class="lb-img" id="lbImg" src="" alt="">
+    <div class="lb-counter" id="lbCounter"></div>
+    <div class="lb-bar">
+      <div class="lb-info" id="lbInfo"></div>
+      <div class="lb-btns">
+        <a class="btn btn-primary btn-sm" id="lbDl" href="" target="_blank" download>⬇ Tải ảnh</a>
+        <button class="btn btn-ghost btn-sm" onclick="closeLb()">Đóng</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ─────────────────────────────────────────────────────────────
+// ĐÂY LÀ 45 ẢNH BXH — chỉ cần thay link catbox là xong
+// url: "" = slot chưa có ảnh (hiện placeholder)
+// ─────────────────────────────────────────────────────────────
+const SLOTS = [
+  { url: "https://files.catbox.moe/xdl58j.png", title: "BXH #1"  },
+  { url: "https://files.catbox.moe/izw7et.png", title: "BXH #2"  },
+  { url: "https://files.catbox.moe/h8vjau.png", title: "BXH #3"  },
+  { url: "https://files.catbox.moe/ldj2fs.png", title: "BXH #4"  },
+  { url: "https://files.catbox.moe/8c8ifn.png", title: "BXH #5"  },
+  { url: "https://files.catbox.moe/p0tivb.png", title: "BXH #6"  },
+  { url: "https://files.catbox.moe/tqk3gu.png", title: "BXH #7"  },
+  { url: "https://files.catbox.moe/v1ia1o.png", title: "BXH #8"  },
+  { url: "https://files.catbox.moe/za8j0q.png", title: "BXH #9"  },
+  { url: "https://files.catbox.moe/utsbyf.png", title: "BXH #10" },
+  { url: "https://files.catbox.moe/4aasi6.png", title: "BXH #11" },
+  { url: "https://files.catbox.moe/bpxo21.png", title: "BXH #12" },
+  { url: "https://files.catbox.moe/t67d3o.png", title: "BXH #13" },
+  { url: "https://files.catbox.moe/9fpty0.png", title: "BXH #14" },
+  { url: "https://files.catbox.moe/h2nerq.png", title: "BXH #15" },
+  { url: "https://files.catbox.moe/2m8kds.png", title: "BXH #16" },
+  { url: "https://files.catbox.moe/1v06fr.png", title: "BXH #17" },
+  { url: "https://files.catbox.moe/b90gi7.png", title: "BXH #18" },
+  { url: "https://files.catbox.moe/kfzbrc.png", title: "BXH #19" },
+  { url: "https://files.catbox.moe/9lqk5m.png", title: "BXH #20" },
+  { url: "https://files.catbox.moe/92swz4.png", title: "BXH #21" },
+  { url: "https://files.catbox.moe/ouill8.png", title: "BXH #22" },
+  { url: "https://files.catbox.moe/8pmyeo.png", title: "BXH #23" },
+  { url: "https://files.catbox.moe/y77r7w.png", title: "BXH #24" },
+  { url: "https://files.catbox.moe/vx7r7e.png", title: "BXH #25" },
+  { url: "https://files.catbox.moe/87t61x.png", title: "BXH #26" },
+  { url: "https://files.catbox.moe/2rks3u.png", title: "BXH #27" },
+  { url: "https://files.catbox.moe/4808q1.png", title: "BXH #28" },
+  { url: "https://files.catbox.moe/opxpnd.png", title: "BXH #29" },
+  { url: "https://files.catbox.moe/ks6f81.png", title: "BXH #30" },
+  { url: "https://files.catbox.moe/8463b2.png", title: "BXH #31" },
+  { url: "https://files.catbox.moe/yc7ym0.png", title: "BXH #32" },
+  { url: "https://files.catbox.moe/gnp02j.png", title: "BXH #33" },
+  { url: "https://files.catbox.moe/m7i3ar.png", title: "BXH #34" },
+  { url: "https://files.catbox.moe/56rsso.png", title: "BXH #35" },
+  { url: "https://files.catbox.moe/1m203l.png", title: "BXH #36" },
+  { url: "https://files.catbox.moe/7m31hx.png", title: "BXH #37" },
+  { url: "https://files.catbox.moe/ucxxl6.png", title: "BXH #38" },
+  { url: "https://files.catbox.moe/3z8q3a.png", title: "BXH #39" },
+  { url: "https://files.catbox.moe/657pdw.png", title: "BXH #40" },
+  { url: "https://files.catbox.moe/zoaqtz.png", title: "BXH #41" },
+  { url: "https://files.catbox.moe/l6pty3.png", title: "BXH #42" },
+  { url: "https://files.catbox.moe/7pu44l.png", title: "BXH #43" },
+  { url: "https://files.catbox.moe/p5u327.png", title: "BXH #44" },
+  { url: "https://files.catbox.moe/fd2j3k.png", title: "BXH #45" },
+];
+
+// Index của các slot có ảnh, dùng cho lightbox nav
+let filledIndexes = [];
+let lbPos = 0; // vị trí trong filledIndexes
+
+// ─────────────────────────────────────────────────────────────
+// RENDER
+// ─────────────────────────────────────────────────────────────
+function render() {
+  const q      = (document.getElementById('searchInp').value || '').trim().toLowerCase();
+  const filter = document.getElementById('filterSel').value;
+  const grid   = document.getElementById('grid');
+  const badge  = document.getElementById('countBadge');
+
+  const filled = SLOTS.filter(s => s.url).length;
+  badge.textContent = `${filled} / 45 bảng`;
+
+  // Build filledIndexes cho lightbox
+  filledIndexes = SLOTS.map((s, i) => s.url ? i : -1).filter(i => i >= 0);
+
+  let html = '';
+  let shown = 0;
+
+  SLOTS.forEach((slot, i) => {
+    const num = i + 1;
+    const has = !!slot.url;
+
+    if (filter === 'filled' && !has) return;
+    if (filter === 'empty'  &&  has) return;
+
+    if (q) {
+      const hay = `${num} bxh${num} ${(slot.title || '').toLowerCase()}`;
+      if (!hay.includes(q)) return;
+    }
+
+    shown++;
+    const delay = Math.min(shown * 0.022, 0.5).toFixed(3);
+
+    if (has) {
+      html += `
+        <div class="card" style="animation-delay:${delay}s" onclick="openLb(${i})">
+          <div class="card-num">${num}</div>
+          <a class="card-dl" href="${slot.url}" download target="_blank" onclick="event.stopPropagation()" title="Tải ảnh">⬇</a>
+          <div class="card-img-wrap">
+            <img class="card-img" src="${slot.url}" alt="${slot.title}" loading="lazy"
+              onerror="this.parentElement.innerHTML='<div class=\\"card-ph\\"><div class=\\"card-ph-n\\">${num}</div><div class=\\"card-ph-lbl\\">Lỗi tải ảnh</div></div>'">
+          </div>
+          <div class="card-body">
+            <div class="card-title">${slot.title}</div>
+            <div class="card-meta"><span class="card-tag">BXH #${num}</span></div>
+          </div>
+        </div>`;
+    } else {
+      html += `
+        <div class="card" style="animation-delay:${delay}s;cursor:default;pointer-events:none;opacity:.45">
+          <div class="card-num">${num}</div>
+          <div class="card-ph">
+            <div class="card-ph-n">${num}</div>
+            <div class="card-ph-lbl">Chưa có ảnh</div>
+          </div>
+          <div class="card-body">
+            <div class="card-title" style="color:var(--muted)">${slot.title}</div>
+            <div class="card-meta"><span class="card-tag" style="opacity:.4">BXH #${num}</span></div>
+          </div>
+        </div>`;
+    }
+  });
+
+  if (!shown) {
+    grid.innerHTML = `
+      <div class="empty">
+        <div class="empty-icon">🔍</div>
+        <div class="empty-title">Không có kết quả</div>
+      </div>`;
+  } else {
+    grid.innerHTML = html;
+  }
+}
+
+// ─────────────────────────────────────────────────────────────
+// LIGHTBOX
+// ─────────────────────────────────────────────────────────────
+function openLb(slotIndex) {
+  const pos = filledIndexes.indexOf(slotIndex);
+  if (pos === -1) return;
+  lbPos = pos;
+  showLb();
+  document.getElementById('lightbox').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function showLb() {
+  const i    = filledIndexes[lbPos];
+  const slot = SLOTS[i];
+  if (!slot) return;
+
+  const img     = document.getElementById('lbImg');
+  const info    = document.getElementById('lbInfo');
+  const dl      = document.getElementById('lbDl');
+  const counter = document.getElementById('lbCounter');
+
+  img.src  = slot.url;
+  img.alt  = slot.title;
+  if (info)    info.innerHTML = `<b>${slot.title}</b>`;
+  if (dl)    { dl.href = slot.url; dl.download = `bxh_${i+1}.png`; }
+  if (counter) counter.textContent = `${lbPos + 1} / ${filledIndexes.length}`;
+}
+
+function lbNav(dir) {
+  if (!filledIndexes.length) return;
+  lbPos = ((lbPos + dir) % filledIndexes.length + filledIndexes.length) % filledIndexes.length;
+  showLb();
+}
+
+function closeLb() {
+  document.getElementById('lightbox').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+function lbClickBg(e) {
+  if (e.target === document.getElementById('lightbox')) closeLb();
+}
+
+// Keyboard
+document.addEventListener('keydown', e => {
+  if (!document.getElementById('lightbox').classList.contains('open')) return;
+  if (e.key === 'ArrowRight' || e.key === 'ArrowDown') { lbNav(+1); e.preventDefault(); }
+  if (e.key === 'ArrowLeft'  || e.key === 'ArrowUp')   { lbNav(-1); e.preventDefault(); }
+  if (e.key === 'Escape') closeLb();
+});
+
+// Swipe mobile
+let touchX = 0;
+document.getElementById('lightbox').addEventListener('touchstart', e => { touchX = e.touches[0].clientX; }, { passive:true });
+document.getElementById('lightbox').addEventListener('touchend',   e => {
+  const dx = e.changedTouches[0].clientX - touchX;
+  if (Math.abs(dx) > 50) lbNav(dx < 0 ? 1 : -1);
+});
+
+// ─────────────────────────────────────────────────────────────
+// BOOT
+// ─────────────────────────────────────────────────────────────
+render();
+</script>
+
+</body>
+</html>
